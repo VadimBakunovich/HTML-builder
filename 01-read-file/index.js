@@ -1,4 +1,4 @@
-const { createReadStream } = require('fs'); 
+const { createReadStream } = require('fs');
 const { join } = require('path');
 
 const stream = createReadStream(join(__dirname, 'text.txt'), 'utf8');
