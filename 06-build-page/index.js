@@ -1,7 +1,8 @@
-const { mkdir, readdir, copyFile, readFile, writeFile, appendFile, stat, rm } = require('fs/promises');
+const { rm, mkdir, readdir, copyFile, readFile, writeFile, appendFile, stat } = require('fs/promises');
 const { join, parse } = require('path');
 
-async function fillTemplate(template) {
+async function createHtml() {
+  let template = await readFile(join(__dirname, 'template.html'), { encoding: 'utf8' });
   const files = await readdir(join(__dirname, 'components'));
   if (files.length) {
     for (const file of files) {
@@ -13,11 +14,10 @@ async function fillTemplate(template) {
       }
     }
   }
-  return template;
+  await writeFile(join(__dirname, 'project-dist' ,'index.html'), template);
 }
 
 async function createStyles() {
-  await writeFile(join(__dirname, 'project-dist' ,'style.css'), '');
   const files = await readdir(join(__dirname, 'styles'));
   if (files.length) {
     for (const file of files) {
@@ -30,22 +30,20 @@ async function createStyles() {
   }
 }
 
-async function copyRecursive(src, dest) {
+async function copyAssets(src, dest) {
   const stats = await stat(src);
   const isDirectory = stats.isDirectory();
   if (isDirectory) {
     await mkdir(dest, { recursive: true });
     const files = await readdir(src);
     for (const file of files) {
-      copyRecursive(join(src, file), join(dest, file));
+      copyAssets(join(src, file), join(dest, file));
     }
   } else await copyFile(src, dest);
 }
 
-mkdir(join(__dirname, 'project-dist'), { recursive: true })
-  .then(() => readFile(join(__dirname, 'template.html'), { encoding: 'utf8' }))
-  .then(template => fillTemplate(template))
-  .then(htmlBuild => writeFile(join(__dirname, 'project-dist' ,'index.html'), htmlBuild))
+rm(join(__dirname, 'project-dist'), { recursive: true, force: true })
+  .then(() => mkdir(join(__dirname, 'project-dist'), { recursive: true }))
+  .then(() => createHtml())
   .then(() => createStyles())
-  .then(() => rm(join(__dirname, 'project-dist', 'assets'), { recursive: true, force: true }))
-  .then(() => copyRecursive(join(__dirname, 'assets'), join(__dirname, 'project-dist', 'assets')));
+  .then(() => copyAssets(join(__dirname, 'assets'), join(__dirname, 'project-dist', 'assets')));
