@@ -1,30 +1,21 @@
-const { mkdir, readdir, unlink, copyFile } = require('fs/promises');
+const { rm, mkdir, readdir, stat, copyFile } = require('fs/promises');
 const { join } = require('path');
 
-(function copyDir() {
-  mkdir(join(__dirname, 'files-copy'), { recursive: true })
-    .then(() => {
-      return readdir(join(__dirname, 'files-copy'))
-        .then(
-          files => {
-            if (files.length) {
-              for (let i of files) unlink(join(__dirname, 'files-copy', i));
-            }
-          }
-        );
-    })
-    .then(() => {
-      readdir(join(__dirname, 'files'))
-        .then(
-          files => {
-            if (files.length) {
-              for (let i of files) {
-                const srcPath = join(__dirname, 'files', i);
-                const destPath = join(__dirname, 'files-copy', i);
-                copyFile(srcPath, destPath);
-              }
-            }
-          }
-        );
-    });
-})();
+async function copyRecursive(src, dest) {
+  const stats = await stat(src);
+  const isDirectory = stats.isDirectory();
+  if (isDirectory) {
+    await mkdir(dest, { recursive: true });
+    const files = await readdir(src);
+    for (const file of files) {
+      copyRecursive(join(src, file), join(dest, file));
+    }
+  } else await copyFile(src, dest);
+}
+
+async function copyDir(src, dest) {
+  await rm(dest, { recursive: true, force: true });
+  copyRecursive(src, dest);
+}
+
+copyDir(join(__dirname, 'files'), join(__dirname, 'files-copy'));
