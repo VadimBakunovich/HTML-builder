@@ -6,9 +6,9 @@ async function copyRecursive(src, dest) {
   const isDirectory = stats.isDirectory();
   if (isDirectory) {
     await mkdir(dest, { recursive: true });
-    const files = await readdir(src);
-    for (const file of files) {
-      copyRecursive(join(src, file), join(dest, file));
+    const items = await readdir(src);
+    for (const item of items) {
+      copyRecursive(join(src, item), join(dest, item));
     }
   } else await copyFile(src, dest);
 }
