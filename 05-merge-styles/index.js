@@ -5,12 +5,14 @@ async function mergeStyles(src, dest) {
   await writeFile(dest, '');
   const items = await readdir(src);
   if (items.length) {
-    for (let item of items) {
+    for (const item of items) {
       const stats = await stat(join(src, item));
-      const ext = parse(join(src, item)).ext;
-      if (stats.isFile() && ext == '.css') {
-        const data = await readFile(join(src, item));
-        await appendFile(dest, data);
+      if (stats.isFile()) {
+        const ext = parse(item).ext;
+        if (ext == '.css') {
+          const data = await readFile(join(src, item));
+          await appendFile(dest, data);
+        }
       }
     }
   }
